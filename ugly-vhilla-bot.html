@@ -1,29 +1,33 @@
 <!DOCTYPE html>
-<html>
-<head>
+<!-- saved from url=(0071)https://raw.githack.com/kh3chen/Toolbundles/master/ugly-vhilla-bot.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Ugly VHilla bot</title>
-    <meta charset="utf-8">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-    <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/915932/articulate.min.js"></script>
+    
+    <script src="./Ugly VHilla bot_files/jquery.min.js.download"></script>
+    <script src="./Ugly VHilla bot_files/articulate.min.js.download"></script>
     <style>
         body { line-height: 30px; }
+        #counter { font-size: 2em; }
         #info { font-size: 2em; }
     </style>
 </head>
 <body>
+    <div id="counter"></div> 
     <button id="start">Start fight</button> <br>
 
     Her HP range: 
-    <input type="radio" name="hp-range" value="0" checked> initial 
+    <input type="radio" name="hp-range" value="0" checked=""> initial 
     <input type="radio" name="hp-range" value="1"> P2 below 35% 
     <input type="radio" name="hp-range" value="2"> P3 below 20%<br>
 
-    Fucked up timer? Try:
+    Fucked up timer? Try: <br>
+
+    <button id="override-previous">Set last FMA based on current HP range</button> OR<br>
 
     <button id="reset-fma">Reset FMA (based on current time)</button> OR<br>
 
     Last FMA occurred at: <input type="text" id="last-fma" placeholder="e.g: 27:12"> <button id="reset-fma-manual">Manual reset</button>
- 
+
     <div id="info"></div>
 
     <script>
@@ -34,37 +38,51 @@
         let fmaIntervals = [ts(2, 32), ts(2, 7), ts(1, 42)];
         let timer   = null;
         let counter = ts(30, 0);
+        let lastFMA = -1;
         let nextFMA = -1;
-        let resetFMA = () => {
-            let intervalPhase = parseInt($('input[name="hp-range"]:checked').val());
-            let fmaInterval = fmaIntervals[intervalPhase];
-            nextFMA = counter - fmaInterval;
-            return d(nextFMA);
+        let resetFMA = (newFMA) => {
+            lastFMA = newFMA;
+            return calculateNextFMA();
         };
         $('#start').click(() => {
             s('Battle begins!');
-            timer = setInterval(() => {
-                counter--;
-                if (nextFMA === -1) 
-                    nextFMA = ts(27, 12);
-                let diff = counter - nextFMA;
-                let fmaAt = d(nextFMA);
-                if (diff === 40 || diff === 10) {
-                    s('FMA in ' + diff + ' seconds! Cleanse!');
-                } else if (diff <= 0) {
-                    let n = resetFMA();
-                    s('Boom! The next FMA happens at ' + n.min + ' ' + n.sec);
-                }
-                $('#info').html('FMA in ' + diff + ' seconds! (at ' + fmaAt.min + ':' + ('' + fmaAt.sec).padStart(2, '0') + ')');
-            }, 1000);
+            interval()
+            timer = setInterval(interval, 100);
             $('#start').hide();
         });
-        $('#reset-fma').click(resetFMA);
+        $('#reset-fma').click(() => {
+            resetFMA(counter)
+        });
         $('#reset-fma-manual').click(() => {
             let time = $('#last-fma').val().split(':').map(x => parseInt(x));
-            counter = ts(time[0], time[1]);
-            resetFMA();
+            lastFMA = ts(time[0], time[1]);
+            calculateNextFMA();
         });
+
+        function interval() {
+            counter--;
+            if (nextFMA === -1) 
+                nextFMA = ts(27, 12);
+            let diff = counter - nextFMA;
+            let fmaAt = d(nextFMA);
+            if (diff === 40 || diff === 10) {
+                s('FMA in ' + diff + ' seconds! Cleanse!');
+            } else if (diff <= 0) {
+                let n = resetFMA(nextFMA);
+                s('Boom! The next FMA happens at ' + n.min + ' ' + n.sec);
+            }
+            $('#counter').html(d(counter).min + ':' + ('' + d(counter).sec).padStart(2, '0'))
+            $('#info').html('FMA in ' + diff + ' seconds! (at ' + fmaAt.min + ':' + ('' + fmaAt.sec).padStart(2, '0') + ')');
+        }
+
+        $('#override-previous').click(calculateNextFMA)
+        function calculateNextFMA() {
+            let intervalPhase = parseInt($('input[name="hp-range"]:checked').val());
+            let fmaInterval = fmaIntervals[intervalPhase];
+            nextFMA = lastFMA - fmaInterval;
+            return d(nextFMA);
+        }
     </script>
-</body>
-</html>
+
+
+</body></html>
