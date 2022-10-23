@@ -13,12 +13,14 @@
 </head>
 <body>
     <div id="counter"></div> 
-    <button id="start">Start fight</button> <br>
+    <button id="start_hard">Start Hard</button>
+    <button id="start_normal">Start Normal</button> 
+    <br>
 
     Her HP range: 
     <input type="radio" name="hp-range" value="0" checked=""> initial 
-    <input type="radio" name="hp-range" value="1"> 60% (P2 below 40%)
-    <input type="radio" name="hp-range" value="2"> 30% (P3 below 20%)<br>
+    <input type="radio" name="hp-range" value="1"> 61%
+    <input type="radio" name="hp-range" value="2"> 30%<br>
 
     Fucked up timer? Try: <br>
 
@@ -35,7 +37,14 @@
         let s  = (c) => $('<div>' + c + '</div>').articulate('speak');
         let ts = (min, sec) => min * 60 + sec;
         let d  = (ts) => ({min: Math.floor(ts / 60), sec: ts % 60});
-        let fmaIntervals = [ts(2, 32), ts(2, 7), ts(1, 42)];
+
+        let fmaIntervalsHard = [ts(2, 32), ts(2, 7), ts(1, 42)];
+        let firstFmaHard = ts(27, 13);
+        let fmaIntervalsNormal = [ts(3, 2), ts(2, 33), ts(2, 4)];
+        let firstFmaNormal = ts(26, 43);
+
+        let fmaIntervals = null;
+        let firstFma = null;
         let timer   = null;
         let counter = ts(30, 0);
         let lastFMA = -1;
@@ -44,11 +53,23 @@
             lastFMA = newFMA;
             return calculateNextFMA();
         };
-        $('#start').click(() => {
+        $('#start_hard').click(() => {
             s('Battle begins!');
+            fmaIntervals = fmaIntervalsHard;
+            firstFma = firstFmaHard;
             interval()
             timer = setInterval(interval, 1000);
-            $('#start').hide();
+            $('#start_hard').hide();
+            $('#start_normal').hide();
+        });
+        $('#start_normal').click(() => {
+            s('Battle begins!');
+            fmaIntervals = fmaIntervalsNormal;
+            firstFma = firstFmaNormal;
+            interval()
+            timer = setInterval(interval, 1000);
+            $('#start_hard').hide();
+            $('#start_normal').hide();
         });
         $('#reset-fma').click(() => {
             resetFMA(counter)
@@ -62,7 +83,7 @@
         function interval() {
             counter--;
             if (nextFMA === -1) 
-                nextFMA = ts(27, 12);
+                nextFMA = firstFma;
             let diff = counter - nextFMA;
             let fmaAt = d(nextFMA);
             if (diff === 40 || diff === 10) {
