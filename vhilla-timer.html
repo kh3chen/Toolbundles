@@ -13,14 +13,22 @@
 </head>
 <body>
     <div id="counter"></div> 
-    <button id="start_hard">Start Hard</button>
-    <button id="start_normal">Start Normal</button> 
+    <button id="start-hard">Start Hard</button>
+    <button id="start-normal">Start Normal</button> 
     <br>
 
-    Her HP range: 
-    <input type="radio" name="hp-range" value="0" checked=""> initial 
-    <input type="radio" name="hp-range" value="1"> 61%
-    <input type="radio" name="hp-range" value="2"> 30%<br>
+	<div id="hp-range-hard-group" style="display:none">
+   		Her HP range: 
+    	<input type="radio" name="hp-range-hard" value="0" checked=""> initial 
+    	<input type="radio" name="hp-range-hard" value="1"> 61%
+    	<input type="radio" name="hp-range-hard" value="2"> 30%<br>
+    </div>
+
+    <div id="hp-range-normal-group" style="display:none">
+   		Her HP range: 
+    	<input type="radio" name="hp-range-normal" value="0" checked=""> initial 
+    	<input type="radio" name="hp-range-normal" value="1"> 50%<br>
+    </div>
 
     Fucked up timer? Try: <br>
 
@@ -28,7 +36,7 @@
 
     <button id="reset-fma">Reset FMA (based on current time)</button> OR<br>
 
-    Last FMA occurred at: <input type="text" id="last-fma" placeholder="e.g: 27:12"> <button id="reset-fma-manual">Manual reset</button>
+    Last FMA occurred at: <input type="text" id="last-fma" placeholder="e.g: 27:13"> <button id="reset-fma-manual">Manual reset</button>
 
     <div id="info"></div>
 
@@ -40,10 +48,10 @@
 
         let fmaIntervalsHard = [ts(2, 32), ts(2, 7), ts(1, 42)];
         let firstFmaHard = ts(27, 13);
-        let fmaIntervalsNormal = [ts(3, 2), ts(2, 33), ts(2, 4)];
+        let fmaIntervalsNormal = [ts(3, 2), ts(2, 33)];
         let firstFmaNormal = ts(26, 43);
 
-        let fmaIntervals = null;
+        let isHard = null;
         let firstFma = null;
         let timer   = null;
         let counter = ts(30, 0);
@@ -53,23 +61,25 @@
             lastFMA = newFMA;
             return calculateNextFMA();
         };
-        $('#start_hard').click(() => {
+        $('#start-hard').click(() => {
             s('Battle begins!');
-            fmaIntervals = fmaIntervalsHard;
+            isHard = true;
             firstFma = firstFmaHard;
             interval()
-            timer = setInterval(interval, 1000);
-            $('#start_hard').hide();
-            $('#start_normal').hide();
+            timer = setInterval(interval, 100);
+            $('#start-hard').hide();
+            $('#start-normal').hide();
+            $('#hp-range-hard-group').show();
         });
-        $('#start_normal').click(() => {
+        $('#start-normal').click(() => {
             s('Battle begins!');
-            fmaIntervals = fmaIntervalsNormal;
+            isHard = false;
             firstFma = firstFmaNormal;
             interval()
-            timer = setInterval(interval, 1000);
-            $('#start_hard').hide();
-            $('#start_normal').hide();
+            timer = setInterval(interval, 100);
+            $('#start-hard').hide();
+            $('#start-normal').hide();
+            $('#hp-range-normal-group').show();
         });
         $('#reset-fma').click(() => {
             resetFMA(counter)
@@ -98,8 +108,14 @@
 
         $('#override-previous').click(calculateNextFMA)
         function calculateNextFMA() {
-            let intervalPhase = parseInt($('input[name="hp-range"]:checked').val());
-            let fmaInterval = fmaIntervals[intervalPhase];
+        	let fmaInterval;
+        	if (isHard) {
+				let intervalPhase = parseInt($('input[name="hp-range-hard"]:checked').val());
+            	fmaInterval = fmaIntervalsHard[intervalPhase];
+        	} else {
+        		let intervalPhase = parseInt($('input[name="hp-range-normal"]:checked').val());
+            	fmaInterval = fmaIntervalsNormal[intervalPhase];
+        	}
             nextFMA = lastFMA - fmaInterval;
             return d(nextFMA);
         }
