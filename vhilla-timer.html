@@ -32,11 +32,11 @@
 
     Fucked up timer? Try: <br>
 
-    <button id="override-previous">Set last FMA based on current HP range</button> OR<br>
+    <button id="override-previous" disabled>Set last FMA based on current HP range</button> OR<br>
 
-    <button id="reset-fma">Reset FMA (based on current time)</button> OR<br>
+    <button id="reset-fma" disabled>Reset FMA (based on current time)</button> OR<br>
 
-    Last FMA occurred at: <input type="text" id="last-fma" placeholder="e.g: 27:13"> <button id="reset-fma-manual">Manual reset</button>
+    Last FMA occurred at: <input type="text" id="last-fma" placeholder="e.g: 27:13"> <button id="reset-fma-manual" disabled>Manual reset</button>
 
     <div id="info"></div>
 
@@ -66,20 +66,26 @@
             isHard = true;
             firstFma = firstFmaHard;
             interval()
-            timer = setInterval(interval, 100);
+            timer = setInterval(interval, 1000);
             $('#start-hard').hide();
             $('#start-normal').hide();
             $('#hp-range-hard-group').show();
+            $('#override-previous').removeAttr("disabled");
+            $('#reset-fma').removeAttr("disabled");
+            $('#reset-fma-manual').removeAttr("disabled");
         });
         $('#start-normal').click(() => {
             s('Battle begins!');
             isHard = false;
             firstFma = firstFmaNormal;
             interval()
-            timer = setInterval(interval, 100);
+            timer = setInterval(interval, 1000);
             $('#start-hard').hide();
             $('#start-normal').hide();
             $('#hp-range-normal-group').show();
+            $('#override-previous').removeAttr("disabled");
+            $('#reset-fma').removeAttr("disabled");
+            $('#reset-fma-manual').removeAttr("disabled");
         });
         $('#reset-fma').click(() => {
             resetFMA(counter)
