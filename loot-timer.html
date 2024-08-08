@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loot Timer</title>
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/915932/articulate.min.js"></script>
+    <style>
+        body { line-height: 30px; }
+        #summonCounter { font-size: 2em; }
+        #info { font-size: 1.5em; }
+        #couponCounter { font-size: 2em; }
+        #couponExpInfo { font-size: 1.5em; }
+        #couponLegionInfo { font-size: 1.5em; }
+    </style>
+</head>
+<body>
+    <audio id="audioLoot" src="Iridium.ogg" preload="auto"></audio>
+    <audio id="audioFountain" src="Rhea.ogg" preload="auto"></audio>
+    <audio id="audioBoss" src="Spica.ogg" preload="auto"></audio>
+
+    <button id="startKannaTimer">Start Kanna Timer</button>
+    <button id="startSummonTimer">Start Summon Timer</button>
+    <input type="number" id="summonTime" name="summonTime" value="59">
+    <button id="reset" style="display:none">Reset Summon Timer</button>
+    <div id="summonCounter"></div>
+    <div id="info"></div>
+    <br>
+    <table>
+      <tr>
+        <td>
+            EXP Coupon
+        </td>
+        <td>
+            <input type="radio" id="exp30" name="couponExp" value="30"><label for="exp30"> 30 min</label>
+        </td>
+        <td>
+            <input type="radio" id="exp15" name="couponExp" value="15"><label for="exp15"> 15 min</label>
+        </td>
+      </tr>
+            <tr>
+        <td>
+            Legion Coupon
+        </td>
+        <td>
+            <input type="radio" id="legion30" name="couponLegion" value="30"><label for="legion30"> 30 min</label>
+        </td>
+        <td>
+            <input type="radio" id="legion20" name="couponLegion" value="20"><label for="legion20"> 20 min</label>
+        </td>
+        <td>
+            <input type="radio" id="legion10" name="couponLegion" value="10"><label for="legion10"> 10 min</label>
+        </td>
+      </tr>
+    </table>
+    <button id="startCouponTimer">Start Coupon Timer</button>
+    <div id="couponCounter"></div>
+    <div id="couponExpInfo"></div>
+    <div id="couponLegionInfo"></div>
+
+    <script>
+        let s  = (c) => $('<div>' + c + '</div>').articulate('speak');
+        let ts = (min, sec) => min * 60 + sec;
+        let d  = (ts) => ({min: Math.floor(ts / 60), sec: ts % 60});
+        let summonCounter = -1;
+        let summonTimeValue = -1;
+        let summonInterval;
+        let couponCounter = -1;
+        let couponInterval;
+        let lastExpCouponTimeValue = -1;
+        let lastLegionCouponTimeValue = -1;
+
+        $('#startSummonTimer').click(() => {
+            $('#info').html(summonTime.value + 's Summon Timer');
+            summonTimeValue = parseInt(summonTime.value)
+            summonCounter = summonTimeValue;
+            start(intervalSummon)
+
+            $('#reset').click(() => {
+                summonCounter = summonTimeValue
+            })
+        });
+
+        $('#startKannaTimer').click(() => {
+            summonCounter = ts(2, 0)
+            start(interval_kanna)
+
+            $('#reset').click(() => {
+                summonCounter = ts(2, 0)
+            })
+        });
+
+        function start(interval) {
+            interval()
+            summonInterval = setInterval(interval, 1000);
+            $('#startKannaTimer').hide();
+            $('#startSummonTimer').hide();
+            $('#summonTime').hide();
+            $('#reset').show();
+        }
+
+        function intervalSummon() {
+            if (summonCounter === summonTimeValue) {
+                audioFountain.play()
+            } else if (summonCounter === 0) {
+                audioFountain.play()
+                summonCounter = summonTimeValue;
+            }
+            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'))
+            summonCounter--;
+        }
+
+
+        function interval_kanna() {
+            if (summonCounter === ts(2, 0)) {
+                audioLoot.play()
+                // s('Start, Summon Fountain and Boss')
+                $('#info').html('Start, Summon Fountain and Boss');
+            } else if (summonCounter === ts(1, 30)) {
+                audioBoss.play()
+                // s('Resummon Boss')
+                $('#info').html('Resummon Boss');
+            } else if (summonCounter === ts(1, 0)) {
+                audioFountain.play()
+                // s('Resummon Fountain and Boss')
+                $('#info').html('Resummon Fountain and Boss');
+            } else if (summonCounter === ts(0, 30)) {
+                audioBoss.play()
+                // s('Resummon Boss')
+                $('#info').html('Resummon Boss');
+            } else if (summonCounter === ts(0, 0)) {
+                audioLoot.play()
+                // s('Loot, Resummon Fountain and Boss')
+                $('#info').html('Loot, Resummon Fountain and Boss');
+                summonCounter = ts(2, 0);
+            }
+            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'))
+            summonCounter--;
+        }
+
+        $('#startCouponTimer').click(() => {
+            couponCounter = 0;
+            lastExpCouponTimeValue = 0;
+            lastLegionCouponTimeValue = 0;
+            intervalCoupon();
+            couponInterval = setInterval(intervalCoupon, 1000);
+            $('#startCouponTimer').hide();
+        });
+
+        function intervalCoupon() {
+            $('#couponCounter').html(d(couponCounter).min + ':' + ('' + d(couponCounter).sec).padStart(2, '0'))
+
+            nextExpCouponTimeValue = null;
+            if (exp15.checked) {
+                nextExpCouponTimeValue = lastExpCouponTimeValue + ts(parseInt(exp15.value), 0)
+            } else if (exp30.checked) {
+                nextExpCouponTimeValue = lastExpCouponTimeValue + ts(parseInt(exp30.value), 0)
+            }
+
+            if (nextExpCouponTimeValue != null) {
+                $('#couponExpInfo').html('Next EXP Coupon: ' + d(nextExpCouponTimeValue).min + ':' + ('' + d(nextExpCouponTimeValue).sec).padStart(2, '0'));
+                if (couponCounter === nextExpCouponTimeValue) {
+                    lastExpCouponTimeValue = nextExpCouponTimeValue;
+                    audioLoot.play();
+                }
+            }
+
+            nextLegionCouponTimeValue = null;
+            if (legion10.checked) {
+                nextLegionCouponTimeValue = lastLegionCouponTimeValue + ts(parseInt(legion10.value), 0)
+            } else if (legion20.checked) {
+                nextLegionCouponTimeValue = lastLegionCouponTimeValue + ts(parseInt(legion20.value), 0)
+            } else if (legion30.checked) {
+                nextLegionCouponTimeValue = lastLegionCouponTimeValue + ts(parseInt(legion30.value), 0)
+            }
+
+            if (nextLegionCouponTimeValue != null) {
+                $('#couponLegionInfo').html('Next Legion Coupon: ' + d(nextLegionCouponTimeValue).min + ':' + ('' + d(nextLegionCouponTimeValue).sec).padStart(2, '0'));
+                if (couponCounter === nextLegionCouponTimeValue) {
+                    lastLegionCouponTimeValue = nextLegionCouponTimeValue;
+                    audioLoot.play();
+                }
+            }
+
+            couponCounter++;
+        }
+
+
+    </script>
+</body>
+</html>
