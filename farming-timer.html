@@ -21,7 +21,7 @@
 
     <button id="startKannaTimer">Start Kanna Timer</button>
     <button id="startSummonTimer">Start Summon Timer</button>
-    <input type="number" id="summonTime" name="summonTime" value="59">
+    <input type="number" id="summonTime" name="summonTime" value="61">
     <button id="reset" style="display:none">Reset Summon Timer</button>
     <div id="summonCounter"></div>
     <div id="info"></div>
@@ -149,21 +149,25 @@
             lastExpCouponTimeValue = 0;
             lastLegionCouponTimeValue = 0;
             intervalCoupon();
-            couponInterval = setInterval(intervalCoupon, 1000);
+            couponInterval = setInterval(intervalCoupon, 10);
             $('#startCouponTimer').hide();
         });
 
         function intervalCoupon() {
             $('#couponCounter').html(d(couponCounter).min + ':' + ('' + d(couponCounter).sec).padStart(2, '0'))
 
-            nextExpCouponTimeValue = null;
-            if (exp15.checked) {
-                nextExpCouponTimeValue = lastExpCouponTimeValue + ts(parseInt(exp15.value), 0)
-            } else if (exp30.checked) {
-                nextExpCouponTimeValue = lastExpCouponTimeValue + ts(parseInt(exp30.value), 0)
+            nextExpCouponTimeValue = lastExpCouponTimeValue;
+            while (couponCounter > nextExpCouponTimeValue) {
+                if (exp15.checked) {
+                    nextExpCouponTimeValue = nextExpCouponTimeValue + ts(parseInt(exp15.value), 0)
+                } else if (exp30.checked) {
+                    nextExpCouponTimeValue = nextExpCouponTimeValue + ts(parseInt(exp30.value), 0)
+                } else {
+                    break;
+                }
             }
 
-            if (nextExpCouponTimeValue != null) {
+            if (nextExpCouponTimeValue > 0) {
                 $('#couponExpInfo').html('Next EXP Coupon: ' + d(nextExpCouponTimeValue).min + ':' + ('' + d(nextExpCouponTimeValue).sec).padStart(2, '0'));
                 if (couponCounter === nextExpCouponTimeValue) {
                     lastExpCouponTimeValue = nextExpCouponTimeValue;
@@ -171,16 +175,20 @@
                 }
             }
 
-            nextLegionCouponTimeValue = null;
-            if (legion10.checked) {
-                nextLegionCouponTimeValue = lastLegionCouponTimeValue + ts(parseInt(legion10.value), 0)
-            } else if (legion20.checked) {
-                nextLegionCouponTimeValue = lastLegionCouponTimeValue + ts(parseInt(legion20.value), 0)
-            } else if (legion30.checked) {
-                nextLegionCouponTimeValue = lastLegionCouponTimeValue + ts(parseInt(legion30.value), 0)
+            nextLegionCouponTimeValue = lastLegionCouponTimeValue;
+            while (couponCounter > nextLegionCouponTimeValue) {
+                if (legion10.checked) {
+                    nextLegionCouponTimeValue = nextLegionCouponTimeValue + ts(parseInt(legion10.value), 0)
+                } else if (legion20.checked) {
+                    nextLegionCouponTimeValue = nextLegionCouponTimeValue + ts(parseInt(legion20.value), 0)
+                } else if (legion30.checked) {
+                    nextLegionCouponTimeValue = nextLegionCouponTimeValue + ts(parseInt(legion30.value), 0)
+                } else {
+                    break;
+                }
             }
 
-            if (nextLegionCouponTimeValue != null) {
+            if (nextLegionCouponTimeValue > 0) {
                 $('#couponLegionInfo').html('Next Legion Coupon: ' + d(nextLegionCouponTimeValue).min + ':' + ('' + d(nextLegionCouponTimeValue).sec).padStart(2, '0'));
                 if (couponCounter === nextLegionCouponTimeValue) {
                     lastLegionCouponTimeValue = nextLegionCouponTimeValue;
