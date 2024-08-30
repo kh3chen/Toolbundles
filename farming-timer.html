@@ -19,9 +19,13 @@
     <audio id="audioFountain" src="Rhea.ogg" preload="auto"></audio>
     <audio id="audioBoss" src="Spica.ogg" preload="auto"></audio>
 
+    <div>
+        <input type="range" min="0" max="100" value="100" step="5" class="slider" id="volumeSlider" oninput="updateVolume(this.value)">
+        <span id="volumeLabel"></span>
+    </div>
     <button id="startKannaTimer">Start Kanna Timer</button>
     <button id="startSummonTimer">Start Summon Timer</button>
-    <input type="number" id="summonTime" name="summonTime" value="61">
+    <input type="number" id="summonTime" name="summonTime" value="61" placeholder="61">
     <button id="reset" style="display:none">Reset Summon Timer</button>
     <div id="summonCounter"></div>
     <div id="info"></div>
@@ -63,6 +67,11 @@
         if (savedSummonTime != null) {
             summonTime.value = savedSummonTime;
         }
+        savedVolume = localStorage.getItem('volume');
+        if (savedVolume != null) {
+            volumeSlider.value = savedVolume;
+        }
+        updateVolume(volumeSlider.value);
 
         let s  = (c) => $('<div>' + c + '</div>').articulate('speak');
         let ts = (min, sec) => min * 60 + sec;
@@ -76,7 +85,11 @@
         let lastLegionCouponTimeValue = -1;
 
         $('#startSummonTimer').click(() => {
-            localStorage.setItem('summon', summonTime.value);
+            if (summonTime.value != '') {
+                localStorage.setItem('summon', summonTime.value);
+            } else {
+                summonTime.value = 61;
+            }
             $('#info').html(summonTime.value + 's Summon Timer');
             summonTimeValue = parseInt(summonTime.value)
             summonCounter = summonTimeValue;
@@ -95,6 +108,14 @@
                 summonCounter = ts(2, 0)
             })
         });
+
+        function updateVolume(volume) {
+            localStorage.setItem('volume', volume);
+            $('#volumeLabel').html('Volume:' + volume);
+            audioLoot.volume = volume / 100;
+            audioFountain.volume = volume / 100;
+            audioBoss.volume = volume / 100;
+        }
 
         function start(interval) {
             interval()
