@@ -35,9 +35,20 @@
     <button id="startKannaTimer">Start Kanna Timer</button>
     <button id="startSummonTimer">Start Summon Timer</button>
     <input type="number" id="summonTime" name="summonTime" value="61" placeholder="61">
-    <button id="reset" style="display:none">Reset Summon Timer</button>
-    <div id="summonCounter"></div>
-    <div id="info"></div>
+    <div id="controls" style="display:none">
+        <button id="rewind">⏴︎</button>
+        <button id="reset">⏮︎</button>
+        <button id="forward">⏵︎</button>
+    </div>
+    
+    <div id="summonDiv">
+        <div id="summonCounter"></div>
+    </div>
+    <div id="infoDiv" style="display:none">
+        <button id="shorten">-1</button>
+        <button id="lengthen">+1</button>
+        <span id="info"></span>
+    </div>
     <br>
     <table>
       <tr>
@@ -99,6 +110,8 @@
             } else {
                 summonTime.value = 61;
             }
+            $('#controls').show();
+            $('#infoDiv').show();
             $('#info').html(summonTime.value + 's Summon Timer');
             summonTimeValue = parseInt(summonTime.value)
             summonCounter = summonTimeValue;
@@ -110,6 +123,7 @@
         });
 
         $('#startKannaTimer').click(() => {
+            $('#controls').show();
             summonCounter = ts(2, 0)
             start(interval_kanna)
 
@@ -117,6 +131,24 @@
                 summonCounter = ts(2, 0)
             })
         });
+
+        $('#rewind').click(() => {
+            summonCounter++;
+        })
+
+        $('#forward').click(() => {
+            summonCounter--;
+        })
+
+        $('#shorten').click(() => {
+            summonTimeValue--;
+            $('#info').html(summonTimeValue + 's Summon Timer');
+        })
+
+        $('#lengthen').click(() => {
+            summonTimeValue++;
+            $('#info').html(summonTimeValue + 's Summon Timer');
+        })
 
         function updateVolume(volume) {
             localStorage.setItem('volume', volume);
@@ -142,7 +174,7 @@
                 audioFountain.play()
                 summonCounter = summonTimeValue;
             }
-            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'))
+            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'));
             summonCounter--;
         }
 
