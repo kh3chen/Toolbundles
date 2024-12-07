@@ -133,10 +133,12 @@
         });
 
         $('#rewind').click(() => {
+            $('#summonCounter').html(d(summonCounter + 2).min + ':' + ('' + d(summonCounter + 2).sec).padStart(2, '0'));
             summonCounter++;
         })
 
         $('#forward').click(() => {
+            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'));
             summonCounter--;
         })
 
