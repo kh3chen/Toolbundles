@@ -24,30 +24,32 @@
     </style>
 </head>
 <body>
-    <audio id="audioLoot" src="Iridium.ogg" preload="auto"></audio>
-    <audio id="audioFountain" src="Rhea.ogg" preload="auto"></audio>
-    <audio id="audioBoss" src="Spica.ogg" preload="auto"></audio>
+    <audio id="audioCoupon" src="Iridium.ogg" preload="auto"></audio>
+    <audio id="audioSummon" src="Rhea.ogg" preload="auto"></audio>
 
-    <div>
+    <div id="volume">
         <input type="range" min="0" max="100" value="100" step="5" class="slider" id="volumeSlider" oninput="updateVolume(this.value)">
         <span id="volumeLabel"></span>
     </div>
-    <button id="startKannaTimer">Start Kanna Timer</button>
-    <button id="startSummonTimer">Start Summon Timer</button>
-    <input type="number" id="summonTime" name="summonTime" value="61" placeholder="61">
-    <div id="controls" style="display:none">
-        <button id="rewind">⏴︎</button>
-        <button id="reset">⏮︎</button>
-        <button id="forward">⏵︎</button>
+    <div id="startSummon">
+        <button id="startSummonTimer">Start Summon Timer</button>
+        <input type="number" id="summonTime" name="summonTime" step="0.1" value="60.5" placeholder="60.5">
     </div>
-    
-    <div id="summonDiv">
+    <div id="summonTimer" style="display:none">
+        <div id="controls">
+            <button id="stop">⏹</button>
+            <button id="rewind">⏴︎</button>
+            <button id="reset">⏮︎</button>
+            <button id="forward">⏵︎</button>
+        </div>
         <div id="summonCounter"></div>
-    </div>
-    <div id="infoDiv" style="display:none">
-        <button id="shorten">-1</button>
-        <button id="lengthen">+1</button>
-        <span id="info"></span>
+        <div id="infoDiv">
+            <button id="shortenLarge">-1</button>
+            <button id="shortenSmall">-0.1</button>
+            <button id="lengthenSmall">+0.1</button>
+            <button id="lengthenLarge">+1</button>
+            <span id="info"></span>
+        </div>
     </div>
     <br>
     <table>
@@ -83,142 +85,132 @@
     <div id="couponLegionInfo"></div>
 
     <script>
-        savedSummonTime = localStorage.getItem('summon');
-        if (savedSummonTime != null) {
-            summonTime.value = savedSummonTime;
-        }
-        savedVolume = localStorage.getItem('volume');
-        if (savedVolume != null) {
-            volumeSlider.value = savedVolume;
-        }
-        updateVolume(volumeSlider.value);
-
-        let s  = (c) => $('<div>' + c + '</div>').articulate('speak');
         let ts = (min, sec) => min * 60 + sec;
         let d  = (ts) => ({min: Math.floor(ts / 60), sec: ts % 60});
-        let summonCounter = -1;
+        let s = (ms) => {
+            elapsed = Math.floor(ms / 100) / 10;  
+            if(Math.round(elapsed) == elapsed) { elapsed += '.0'; } 
+            return elapsed;
+        }
+        let ms = (s) => Math.round(s * 10) * 100;
+
+        function updateVolume(volume) {
+            localStorage.setItem('volume', volume);
+            $('#volumeLabel').html('Volume:' + volume);
+            audioCoupon.volume = volume / 100;
+            audioSummon.volume = volume / 100;
+        }
+
+        function init() {
+            savedSummonTime = localStorage.getItem('summon');
+            if (savedSummonTime != null) {
+                summonTime.value = s(savedSummonTime);
+            }
+            savedVolume = localStorage.getItem('volume');
+            if (savedVolume != null) {
+                volumeSlider.value = savedVolume;
+            }
+            updateVolume(volumeSlider.value);
+        }
+        init();
+
+        let nextSummonTimestamp = 0; // unix time in millis
+        let summonCounter = 0;
         let summonTimeValue = -1;
-        let summonInterval;
+        let summonTimeout;
+
+        $('#startSummonTimer').click(() => {
+            if (summonTime.value != '') {
+                summonTimeValue = ms(summonTime.value);
+                localStorage.setItem('summon', summonTimeValue);
+            } else {
+                summonTimeValue = ms(60.5);
+            }
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            $('#startSummon').hide();
+            $('#summonTimer').show();
+            resetSummonTimer();
+        });
+
+        function resetSummonTimer() {
+            clearTimeout(summonTimeout);
+            nextSummonTimestamp = Date.now();
+            summonCounter = 0;
+            updateSummonTimer();
+        }
+
+        function updateSummonTimer() {
+            if (summonCounter === 0) {
+                audioSummon.play();
+                nextSummonTimestamp += summonTimeValue;
+                summonCounter = summonTimeValue;
+            }
+            $('#summonCounter').html(s(summonCounter));
+            summonCounter -= 100; // Update counter every 0.1s
+            
+            
+            summonTimeout = setTimeout(updateSummonTimer, nextSummonTimestamp - summonCounter - Date.now());
+        }
+
+        $('#reset').click(() => {
+            resetSummonTimer();
+        })
+
+        $('#stop').click(() => {
+            clearTimeout(summonTimeout);
+            $('#summonTimer').hide();
+            $('#startSummon').show();
+        });
+
+        $('#rewind').click(() => {
+            $('#summonCounter').html(d(summonCounter + 2).min + ':' + ('' + d(summonCounter + 2).sec).padStart(2, '0'));
+            summonCounter += ms(1);
+        })
+
+        $('#forward').click(() => {
+            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'));
+            summonCounter -= ms(1);
+        })
+
+        $('#shortenLarge').click(() => {
+            summonTimeValue -= ms(1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+        })
+
+        $('#shortenSmall').click(() => {
+            summonTimeValue -= ms(0.1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+        })
+
+        $('#lengthenSmall').click(() => {
+            summonTimeValue += ms(0.1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+        })
+
+
+        $('#lengthenLarge').click(() => {
+            summonTimeValue += ms(1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+        })
+
+        let lastCouponUpdateTimestamp;
         let couponCounter = -1;
         let couponInterval;
         let lastExpCouponTimeValue = -1;
         let lastLegionCouponTimeValue = -1;
 
-        $('#startSummonTimer').click(() => {
-            if (summonTime.value != '') {
-                localStorage.setItem('summon', summonTime.value);
-            } else {
-                summonTime.value = 61;
-            }
-            $('#controls').show();
-            $('#infoDiv').show();
-            $('#info').html(summonTime.value + 's Summon Timer');
-            summonTimeValue = parseInt(summonTime.value)
-            summonCounter = summonTimeValue;
-            start(intervalSummon)
-
-            $('#reset').click(() => {
-                summonCounter = summonTimeValue
-            })
-        });
-
-        $('#startKannaTimer').click(() => {
-            $('#controls').show();
-            summonCounter = ts(2, 0)
-            start(interval_kanna)
-
-            $('#reset').click(() => {
-                summonCounter = ts(2, 0)
-            })
-        });
-
-        $('#rewind').click(() => {
-            $('#summonCounter').html(d(summonCounter + 2).min + ':' + ('' + d(summonCounter + 2).sec).padStart(2, '0'));
-            summonCounter++;
-        })
-
-        $('#forward').click(() => {
-            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'));
-            summonCounter--;
-        })
-
-        $('#shorten').click(() => {
-            summonTimeValue--;
-            $('#info').html(summonTimeValue + 's Summon Timer');
-        })
-
-        $('#lengthen').click(() => {
-            summonTimeValue++;
-            $('#info').html(summonTimeValue + 's Summon Timer');
-        })
-
-        function updateVolume(volume) {
-            localStorage.setItem('volume', volume);
-            $('#volumeLabel').html('Volume:' + volume);
-            audioLoot.volume = volume / 100;
-            audioFountain.volume = volume / 100;
-            audioBoss.volume = volume / 100;
-        }
-
-        function start(interval) {
-            interval()
-            summonInterval = setInterval(interval, 1000);
-            $('#startKannaTimer').hide();
-            $('#startSummonTimer').hide();
-            $('#summonTime').hide();
-            $('#reset').show();
-        }
-
-        function intervalSummon() {
-            if (summonCounter === summonTimeValue) {
-                audioFountain.play()
-            } else if (summonCounter === 0) {
-                audioFountain.play()
-                summonCounter = summonTimeValue;
-            }
-            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'));
-            summonCounter--;
-        }
-
-
-        function interval_kanna() {
-            if (summonCounter === ts(2, 0)) {
-                audioLoot.play()
-                // s('Start, Summon Fountain and Boss')
-                $('#info').html('Start, Summon Fountain and Boss');
-            } else if (summonCounter === ts(1, 30)) {
-                audioBoss.play()
-                // s('Resummon Boss')
-                $('#info').html('Resummon Boss');
-            } else if (summonCounter === ts(1, 0)) {
-                audioFountain.play()
-                // s('Resummon Fountain and Boss')
-                $('#info').html('Resummon Fountain and Boss');
-            } else if (summonCounter === ts(0, 30)) {
-                audioBoss.play()
-                // s('Resummon Boss')
-                $('#info').html('Resummon Boss');
-            } else if (summonCounter === ts(0, 0)) {
-                audioLoot.play()
-                // s('Loot, Resummon Fountain and Boss')
-                $('#info').html('Loot, Resummon Fountain and Boss');
-                summonCounter = ts(2, 0);
-            }
-            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'))
-            summonCounter--;
-        }
-
         $('#startCouponTimer').click(() => {
+            $('#startCouponTimer').hide();
+            nextCouponUpdateTimestamp = Date.now();
             couponCounter = 0;
             lastExpCouponTimeValue = 0;
             lastLegionCouponTimeValue = 0;
-            intervalCoupon();
-            couponInterval = setInterval(intervalCoupon, 1000);
-            $('#startCouponTimer').hide();
+            updateCouponTimer();
         });
 
-        function intervalCoupon() {
+        function updateCouponTimer() {
             $('#couponCounter').html(d(couponCounter).min + ':' + ('' + d(couponCounter).sec).padStart(2, '0'))
+            nextCouponUpdateTimestamp += 1000;
 
             nextExpCouponTimeValue = lastExpCouponTimeValue;
             while (couponCounter > nextExpCouponTimeValue) {
@@ -235,7 +227,7 @@
                 $('#couponExpInfo').html('Next EXP Coupon: ' + d(nextExpCouponTimeValue).min + ':' + ('' + d(nextExpCouponTimeValue).sec).padStart(2, '0'));
                 if (couponCounter === nextExpCouponTimeValue) {
                     lastExpCouponTimeValue = nextExpCouponTimeValue;
-                    audioLoot.play();
+                    audioCoupon.play();
                 }
             }
 
@@ -256,11 +248,12 @@
                 $('#couponLegionInfo').html('Next Legion Coupon: ' + d(nextLegionCouponTimeValue).min + ':' + ('' + d(nextLegionCouponTimeValue).sec).padStart(2, '0'));
                 if (couponCounter === nextLegionCouponTimeValue) {
                     lastLegionCouponTimeValue = nextLegionCouponTimeValue;
-                    audioLoot.play();
+                    audioCoupon.play();
                 }
             }
 
             couponCounter++;
+            setTimeout(updateCouponTimer, nextCouponUpdateTimestamp - Date.now());
         }
 
 
