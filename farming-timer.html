@@ -114,6 +114,8 @@
         }
         init();
 
+        let SUMMON_TIMEOUT_DELAY = ms(0.1);
+
         let nextSummonTimestamp = 0; // unix time in millis
         let summonCounter = 0;
         let summonTimeValue = -1;
@@ -146,7 +148,7 @@
                 summonCounter = summonTimeValue;
             }
             $('#summonCounter').html(s(summonCounter));
-            summonCounter -= 100; // Update counter every 0.1s
+            summonCounter -= SUMMON_TIMEOUT_DELAY;
             
             
             summonTimeout = setTimeout(updateSummonTimer, nextSummonTimestamp - summonCounter - Date.now());
@@ -163,13 +165,15 @@
         });
 
         $('#rewind').click(() => {
-            $('#summonCounter').html(d(summonCounter + 2).min + ':' + ('' + d(summonCounter + 2).sec).padStart(2, '0'));
+            $('#summonCounter').html(s(summonCounter + SUMMON_TIMEOUT_DELAY + ms(1)));
             summonCounter += ms(1);
+            nextSummonTimestamp += ms(1);
         })
 
         $('#forward').click(() => {
-            $('#summonCounter').html(d(summonCounter).min + ':' + ('' + d(summonCounter).sec).padStart(2, '0'));
+            $('#summonCounter').html(s(summonCounter + SUMMON_TIMEOUT_DELAY - ms(1)));
             summonCounter -= ms(1);
+            nextSummonTimestamp -= ms(1);
         })
 
         $('#shortenLarge').click(() => {
