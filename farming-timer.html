@@ -27,30 +27,42 @@
     <audio id="audioCoupon" src="Iridium.ogg" preload="auto"></audio>
     <audio id="audioSummon" src="Rhea.ogg" preload="auto"></audio>
 
-    <div id="volume">
-        <input type="range" min="0" max="100" value="100" step="5" class="slider" id="volumeSlider" oninput="updateVolume(this.value)">
-        <span id="volumeLabel"></span>
-    </div>
     <div id="startSummon">
         <button id="startSummonTimer">Start Summon Timer</button>
         <input type="number" id="summonTime" name="summonTime" step="0.1" value="60.5" placeholder="60.5">
     </div>
-    <div id="summonTimer" style="display:none">
-        <div id="controls">
-            <button id="stop">⏹</button>
-            <button id="rewind">⏴︎</button>
-            <button id="reset">⏮︎</button>
-            <button id="forward">⏵︎</button>
-        </div>
-        <div id="summonCounter"></div>
-        <div id="infoDiv">
-            <button id="shortenLarge">-1</button>
-            <button id="shortenSmall">-0.1</button>
-            <button id="lengthenSmall">+0.1</button>
-            <button id="lengthenLarge">+1</button>
-            <span id="info"></span>
-        </div>
-    </div>
+    <table id="summonTimer" style="display:none">
+        <tr>
+            <td>
+                <div id="summonCounter"></div>
+            </td>
+            <td>&nbsp;</td>
+            <td>
+                <button id="rewindLarge" onclick="rewindLarge()">+1</button>
+                <button id="rewindSmall" onclick="rewindSmall()">+0.1</button>
+                <button id="forwardSmall" onclick="forwardSmall()">-0.1</button>
+                <button id="forwardLarge" onclick="forwardLarge()">-1</button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span id="info"></span>
+            </td>
+            <td>&nbsp;</td>
+            <td>
+                <button id="lengthenLarge">+1</button>
+                <button id="lengthenSmall">+0.1</button>
+                <button id="shortenSmall">-0.1</button>
+                <button id="shortenLarge">-1</button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button id="stop">Stop</button>
+                <button id="reset">Reset</button>
+            </td>
+        </tr>
+    </table>
     <br>
     <table>
       <tr>
@@ -83,6 +95,11 @@
     <div id="couponCounter"></div>
     <div id="couponExpInfo"></div>
     <div id="couponLegionInfo"></div>
+    <br>
+    <div id="volume">
+        <input type="range" min="0" max="100" value="100" step="5" class="slider" id="volumeSlider" oninput="updateVolume(this.value)">
+        <span id="volumeLabel"></span>
+    </div>
 
     <script>
         let ts = (min, sec) => min * 60 + sec;
@@ -164,37 +181,53 @@
             $('#startSummon').show();
         });
 
-        $('#rewind').click(() => {
+        function rewindLarge() {
             $('#summonCounter').html(s(summonCounter + SUMMON_TIMEOUT_DELAY + ms(1)));
             summonCounter += ms(1);
             nextSummonTimestamp += ms(1);
-        })
+        }
 
-        $('#forward').click(() => {
+        function rewindSmall() {
+            $('#summonCounter').html(s(summonCounter + SUMMON_TIMEOUT_DELAY + ms(0.1)));
+            summonCounter += ms(0.1);
+            nextSummonTimestamp += ms(0.1);
+        }
+
+        function forwardSmall() {
+            $('#summonCounter').html(s(summonCounter + SUMMON_TIMEOUT_DELAY - ms(0.1)));
+            summonCounter -= ms(0.1);
+            nextSummonTimestamp -= ms(0.1);
+        }
+
+        function forwardLarge() {
             $('#summonCounter').html(s(summonCounter + SUMMON_TIMEOUT_DELAY - ms(1)));
             summonCounter -= ms(1);
             nextSummonTimestamp -= ms(1);
-        })
-
-        $('#shortenLarge').click(() => {
-            summonTimeValue -= ms(1);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
-        })
-
-        $('#shortenSmall').click(() => {
-            summonTimeValue -= ms(0.1);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
-        })
-
-        $('#lengthenSmall').click(() => {
-            summonTimeValue += ms(0.1);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
-        })
+        }
 
 
         $('#lengthenLarge').click(() => {
             summonTimeValue += ms(1);
             $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            rewindLarge();
+        })
+
+        $('#lengthenSmall').click(() => {
+            summonTimeValue += ms(0.1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            rewindSmall();
+        })
+
+        $('#shortenSmall').click(() => {
+            summonTimeValue -= ms(0.1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            forwardSmall();
+        })
+
+        $('#shortenLarge').click(() => {
+            summonTimeValue -= ms(1);
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            forwardLarge();
         })
 
         let lastCouponUpdateTimestamp;
