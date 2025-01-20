@@ -212,25 +212,25 @@
 
         $('#lengthenLarge').click(() => {
             summonTimeValue += ms(1);
-            $('#info').html(mmss(s(summonTimeValue)) + 's Summon Timer');
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
             rewindLarge();
         })
 
         $('#lengthenSmall').click(() => {
             summonTimeValue += ms(0.1);
-            $('#info').html(mmss(s(summonTimeValue)) + 's Summon Timer');
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
             rewindSmall();
         })
 
         $('#shortenSmall').click(() => {
             summonTimeValue -= ms(0.1);
-            $('#info').html(mmss(s(summonTimeValue)) + 's Summon Timer');
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
             forwardSmall();
         })
 
         $('#shortenLarge').click(() => {
             summonTimeValue -= ms(1);
-            $('#info').html(mmss(s(summonTimeValue)) + 's Summon Timer');
+            $('#info').html(s(summonTimeValue) + 's Summon Timer');
             forwardLarge();
         })
 
