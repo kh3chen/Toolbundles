@@ -103,8 +103,9 @@
 
     <script>
         let ts = (min, sec) => min * 60 + sec;
-        let mmss  = (s) => (Math.floor(Math.ceil(s) / 60)) + ':' + ('' + Math.ceil(s) % 60).padStart(2, '0');
-        let s = (ms) => {
+        let mmss  = (s) => (Math.floor(s / 60)) + ':' + ('' + s % 60).padStart(2, '0');
+        let s = (ms) => Math.ceil(ms / 1000);
+        let ds = (ms) => {
             elapsed = Math.floor(ms / 100) / 10;
             if(Math.round(elapsed) == elapsed) { elapsed += '.0'; } 
             return elapsed;
@@ -121,7 +122,7 @@
         function init() {
             savedSummonTime = localStorage.getItem('summon');
             if (savedSummonTime != null) {
-                summonTime.value = s(savedSummonTime);
+                summonTime.value = ds(savedSummonTime);
             }
             savedVolume = localStorage.getItem('volume');
             if (savedVolume != null) {
@@ -145,7 +146,7 @@
             } else {
                 summonTimeValue = ms(60.5);
             }
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            $('#info').html(ds(summonTimeValue) + 's Summon Timer');
             $('#startSummon').hide();
             $('#summonTimer').show();
             resetSummonTimer();
@@ -164,15 +165,16 @@
                 nextSummonTimestamp += summonTimeValue;
                 summonCounter = summonTimeValue;
             }
-            $('#summonCounter').html(mmss(s(summonCounter)));
+
             if (summonCounter % SUMMON_TIMEOUT_DELAY > 0) {
                 summonCounter -= summonCounter % SUMMON_TIMEOUT_DELAY;
             } else {
                 summonCounter -= SUMMON_TIMEOUT_DELAY;
             }
+            console.log(summonCounter);
+            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY)));
             
-            
-            summonTimeout = setTimeout(updateSummonTimer, nextSummonTimestamp - summonCounter - Date.now());
+            summonTimeout = setTimeout(updateSummonTimer, nextSummonTimestamp - Date.now() - summonCounter);
         }
 
         $('#reset').click(() => {
@@ -186,55 +188,56 @@
         });
 
         function rewindLarge() {
-            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY + ms(1))));
             summonCounter += ms(1);
             nextSummonTimestamp += ms(1);
+            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY)));
         }
 
         function rewindSmall() {
-            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY + ms(0.1))));
             summonCounter += ms(0.1);
             nextSummonTimestamp += ms(0.1);
+            clearTimeout(summonTimeout);
+            summonTimeout = setTimeout(updateSummonTimer, nextSummonTimestamp - Date.now() - summonCounter + summonCounter % SUMMON_TIMEOUT_DELAY);
         }
 
         function forwardSmall() {
-            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY - ms(0.1))));
             summonCounter -= ms(0.1);
             nextSummonTimestamp -= ms(0.1);
+            clearTimeout(summonTimeout);
+            summonTimeout = setTimeout(updateSummonTimer, nextSummonTimestamp - Date.now() - summonCounter + (summonCounter % SUMMON_TIMEOUT_DELAY - SUMMON_TIMEOUT_DELAY));
         }
 
         function forwardLarge() {
-            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY - ms(1))));
             summonCounter -= ms(1);
             nextSummonTimestamp -= ms(1);
+            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY)));
         }
-
 
         $('#lengthenLarge').click(() => {
             summonTimeValue += ms(1);
             localStorage.setItem('summon', summonTimeValue);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            $('#info').html(ds(summonTimeValue) + 's Summon Timer');
             rewindLarge();
         })
 
         $('#lengthenSmall').click(() => {
             summonTimeValue += ms(0.1);
             localStorage.setItem('summon', summonTimeValue);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            $('#info').html(ds(summonTimeValue) + 's Summon Timer');
             rewindSmall();
         })
 
         $('#shortenSmall').click(() => {
             summonTimeValue -= ms(0.1);
             localStorage.setItem('summon', summonTimeValue);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            $('#info').html(ds(summonTimeValue) + 's Summon Timer');
             forwardSmall();
         })
 
         $('#shortenLarge').click(() => {
             summonTimeValue -= ms(1);
             localStorage.setItem('summon', summonTimeValue);
-            $('#info').html(s(summonTimeValue) + 's Summon Timer');
+            $('#info').html(ds(summonTimeValue) + 's Summon Timer');
             forwardLarge();
         })
 
@@ -257,7 +260,7 @@
             $('#couponCounter').html(mmss(couponCounter));
             nextCouponUpdateTimestamp += 1000;
 
-            nextExpCouponTimeValue = lastExpCouponTimeValue;
+            let nextExpCouponTimeValue = lastExpCouponTimeValue;
             while (couponCounter > nextExpCouponTimeValue) {
                 if (exp15.checked) {
                     nextExpCouponTimeValue = nextExpCouponTimeValue + ts(parseInt(exp15.value), 0)
