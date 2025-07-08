@@ -190,7 +190,7 @@
         function rewindLarge() {
             summonCounter += ms(1);
             nextSummonTimestamp += ms(1);
-            $('#summonCounter').html(mmss(s(summonCounter + SUMMON_TIMEOUT_DELAY)));
+            $('#summonCounter').html(mmss(Math.floor((summonCounter + SUMMON_TIMEOUT_DELAY) / 1000)));
         }
 
         function rewindSmall() {
